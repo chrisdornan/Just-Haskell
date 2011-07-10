@@ -148,6 +148,18 @@ fillHistoH = isEmptyH (resultis ()) $
                   True  -> resultis ()
                   False -> zerH i
 
+fillHisto0H :: HProg ()
+fillHisto0H = isEmptyH (return ()) $
+     do mn <- minH
+        mx <- maxH
+        mapH_ fill [mn..mx]
+      where
+        fill i =
+             do ok <- tstH i
+                case ok of
+                  True  -> resultis ()
+                  False -> zerH i
+
 
 
 --
@@ -182,11 +194,18 @@ go = map2histo . chk . run
         chk (_,Left er) = error er
 
 mapH_ :: (a->HProg ()) -> [a] -> HProg ()
-mapH_ _ []     = resultis ()
-mapH_ f (x:xs) = f x >>> mapH_ f xs
+mapH_ f l = mapH f l >>>= \_ -> resultis () 
+
+mapH :: (a->HProg b) -> [a] -> HProg [b]
+mapH _ []     = resultis []
+mapH f (x:xs) = f x >>>= \y -> mapH f xs >>>= \ys -> resultis (y:ys)
 
 
 newtype HProg a = HP (Map Int Int -> (Map Int Int,Either String a))
+
+instance Monad HProg where
+    (>>=)  = (>>>=)
+    return = resultis
 
 
 run :: HProg a -> (Map Int Int,Either String a)
@@ -241,6 +260,8 @@ tstH i = HP $ \h ->(h,Right $ member i h)
 
 isEmptyH :: HProg a -> HProg a -> HProg a
 isEmptyH (HP th) (HP el) = HP $ \h -> if Map.null h then th h else el h 
+
+
 
 --
 -- The Toolbox
