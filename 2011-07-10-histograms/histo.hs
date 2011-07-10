@@ -13,8 +13,8 @@ import qualified Data.Map as Map
 main :: IO ()
 main = getArgs >>= mapM_ histoFile
 
-test :: IO ()
-test =
+smoke :: IO ()
+smoke =
      do putStr ">> p1cHisto\n\n"
         p1cHisto
         putStr "\n>> histoFile\n\n"
