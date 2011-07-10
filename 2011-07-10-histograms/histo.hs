@@ -96,7 +96,7 @@ printHisto nz h = mapM_ pr $ indices h
 
 
 histo :: [Int] -> Histo
-histo = a_histo
+histo = m_histo
 
 
 
@@ -137,7 +137,7 @@ histo0_H :: [Int] -> HProg ()
 histo0_H = mapH_ incH
 
 fillHistoH :: HProg ()
-fillHistoH = 
+fillHistoH = isEmptyH (resultis ()) $
         minH                        >>>= \mn ->
         maxH                        >>>= \mx ->
         mapH_ fill [mn..mx]
@@ -239,7 +239,8 @@ maxH = HP $ \h -> (h,if Map.null h then Left "maxH" else Right $ fst $ findMax h
 tstH :: Int -> HProg Bool
 tstH i = HP $ \h ->(h,Right $ member i h) 
 
-
+isEmptyH :: HProg a -> HProg a -> HProg a
+isEmptyH (HP th) (HP el) = HP $ \h -> if Map.null h then th h else el h 
 
 --
 -- The Toolbox
