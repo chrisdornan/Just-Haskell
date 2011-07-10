@@ -10,6 +10,21 @@ import qualified Data.Map as Map
 
 
 
+main :: IO ()
+main = getArgs >>= mapM_ histoFile
+
+test :: IO ()
+test =
+     do putStr ">> p1cHisto\n\n"
+        p1cHisto
+        putStr "\n>> histoFile\n\n"
+        histoFile "histo.hs"
+        putStr "\n>> emptyHisto\n\n"
+        emptyHisto
+        putStr "\ndone\n"
+
+
+        
 --
 -- To generate a histogram of the least significant digits of first 100 primes
 --
@@ -31,9 +46,6 @@ primes = 2 : sieve [3,5..]
 --
 
 
-main :: IO ()
-main = getArgs >>= mapM_ histoFile
-
 histoFile :: FilePath -> IO ()
 histoFile fnm =
      do putStr $ printf "\n%s\n--------------------\n" fnm
@@ -42,6 +54,16 @@ histoFile fnm =
         h_c cts = genHisto_ $ [ i | Just i<-map parse (words cts) ]
 
         oops _  = putStr "<file missing or inaccessible>\n"
+
+
+
+--
+-- To generate a histogram for empty list
+--
+
+
+emptyHisto :: IO ()
+emptyHisto = genHisto []
 
 
 
@@ -74,7 +96,7 @@ printHisto nz h = mapM_ pr $ indices h
 
 
 histo :: [Int] -> Histo
-histo = f_histo
+histo = a_histo
 
 
 
@@ -134,9 +156,8 @@ fillHistoH =
 
 
 a_histo :: [Int] -> Histo
-a_histo [] = listArray (0,-1) []
 a_histo l  = runSTArray $
-     do arr <- newArray (minimum l,maximum l) 0
+     do arr <- newArray (minMax l) 0
         mapM_ (incST arr) l
         return arr
 
@@ -221,7 +242,7 @@ tstH i = HP $ \h ->(h,Right $ member i h)
 
 
 --
--- map2Histo
+-- The Toolbox
 --
 
 
@@ -233,13 +254,6 @@ map2histo mp | otherwise   = array (mn,mx) $ Map.toList mp
       where
         (mn,_) = findMin mp
         (mx,_) = findMax mp
-
-
-
---
--- The Toolbox
---
-
 
 -- A simple reads wrapper: used here for paring Ints
 
@@ -253,3 +267,9 @@ parse str =
 
 groupSort :: Ord a => [a] -> [[a]]
 groupSort = group . sort
+
+-- minMax (NB: returns (0.-1) for []; model behaviour, not optimized)
+
+minMax :: (Ord a,Num a) => [a] -> (a,a)
+minMax [] = (0,-1)
+minMax xs = (minimum xs,maximum xs)
